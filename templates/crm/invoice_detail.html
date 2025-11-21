@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-file-invoice me-2"></i>{{ page_title }}</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'crm:invoice_edit' invoice.invoice_for_each_campaign_id %}" class="btn btn-warning">
+            <i class="fas fa-edit me-2"></i>Editar
+        </a>
+        <a href="{% url 'crm:invoice_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Información de la Factura</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Número de Factura:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_number|default:"N/A" }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Fecha de Compra:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_purchase_date|date:"d/m/Y" }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Valor de Compra:</strong><br>
+                        ${{ invoice.invoice_for_each_campaign_invoice.invoice_purchase_value|floatformat:0 }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Método de Pago:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_payment_method }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Local Comercial:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_commercial_premise }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Campaña:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_campaign.campaign_name }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Estado:</strong><br>
+                        {% if invoice.invoice_for_each_campaign_invoice.invoice_status %}
+                            <span class="badge bg-success">Activa</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactiva</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Fecha de Registro:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_registration_date|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Información del Cliente</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <strong>Nombre Completo:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_first_name }}
+                        {% if invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_middle_name %}
+                            {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_middle_name }}
+                        {% endif %}
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_first_surname }}
+                        {% if invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_second_surname %}
+                            {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_second_surname }}
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Documento:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_document_number }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Teléfono:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_cell_number }}
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <strong>Email:</strong><br>
+                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_email|default:"N/A" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Tickets Generados -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Tickets Generados</h5>
+            </div>
+            <div class="card-body">
+                {% if tickets %}
+                    <div class="list-group list-group-flush">
+                        {% for ticket in tickets %}
+                            <a href="{% url 'crm:ticket_detail' ticket.ticket_id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Ticket #{{ ticket.ticket_id }}</h6>
+                                    <small>{{ ticket.ticket_registration_date|date:"d/m/Y" }}</small>
+                                </div>
+                                <p class="mb-1">Valor: ${{ ticket.ticket_value|floatformat:0 }}</p>
+                                <small class="text-muted">Campaña: {{ ticket.ticket_campaign.campaign_name }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No se han generado tickets para esta factura.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Estadísticas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary mb-1">{{ tickets|length }}</h4>
+                            <small class="text-muted">Tickets Generados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

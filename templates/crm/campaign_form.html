@@ -1,0 +1,534 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        border-left: 4px solid #007bff;
+        padding-left: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .day-checkbox {
+        margin: 5px 0;
+    }
+    
+    .time-inputs {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-bullhorn me-2"></i>{{ page_title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Información Básica -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Información Básica
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                {{ form.campaign_name.label_tag }}
+                                {{ form.campaign_name }}
+                                {% if form.campaign_name.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.campaign_type.label_tag }}
+                                {{ form.campaign_type }}
+                                {% if form.campaign_type.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premio -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-trophy me-2"></i>Premio de la Campaña
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_award_title.label_tag }}
+                                {{ form.campaign_award_title }}
+                                {% if form.campaign_award_title.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_award_title.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.campaign_award_description.label_tag }}
+                                {{ form.campaign_award_description }}
+                                {% if form.campaign_award_description.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_award_description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_image.label_tag }}
+                                {{ form.campaign_image }}
+                                {% if form.campaign_image.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_image.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Formatos permitidos: JPG, PNG, WEBP. Tamaño máximo: 5MB
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fechas y Horarios -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-calendar me-2"></i>Fechas y Horarios
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_start_date.label_tag }}
+                                {{ form.campaign_start_date }}
+                                {% if form.campaign_start_date.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_start_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_end_date.label_tag }}
+                                {{ form.campaign_end_date }}
+                                {% if form.campaign_end_date.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_end_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_start_time_window.label_tag }}
+                                {{ form.campaign_start_time_window }}
+                                {% if form.campaign_start_time_window.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_start_time_window.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_end_time_window.label_tag }}
+                                {{ form.campaign_end_time_window }}
+                                {% if form.campaign_end_time_window.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_end_time_window.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Días de la Semana -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-calendar-week me-2"></i>Días Habilitados
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p class="text-muted mb-3">Selecciona los días de la semana en que la campaña estará activa:</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_monday }}
+                                            {{ form.campaign_monday.label_tag }}
+                                        </div>
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_tuesday }}
+                                            {{ form.campaign_tuesday.label_tag }}
+                                        </div>
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_wednesday }}
+                                            {{ form.campaign_wednesday.label_tag }}
+                                        </div>
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_thursday }}
+                                            {{ form.campaign_thursday.label_tag }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_friday }}
+                                            {{ form.campaign_friday.label_tag }}
+                                        </div>
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_saturday }}
+                                            {{ form.campaign_saturday.label_tag }}
+                                        </div>
+                                        <div class="form-check day-checkbox">
+                                            {{ form.campaign_sunday }}
+                                            {{ form.campaign_sunday.label_tag }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración de Participación -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-cogs me-2"></i>Configuración de Participación
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_minimum_purchase_value.label_tag }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.campaign_minimum_purchase_value }}
+                                </div>
+                                {% if form.campaign_minimum_purchase_value.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_minimum_purchase_value.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Valor mínimo de compra para participar</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.campaign_ticket_multiplier.label_tag }}
+                                {{ form.campaign_ticket_multiplier }}
+                                {% if form.campaign_ticket_multiplier.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_ticket_multiplier.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Tickets otorgados por cada valor mínimo</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Límites de Participación -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-limit me-2"></i>Límites de Participación
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.campaign_maximum_tickets_per_campaign.label_tag }}
+                                {{ form.campaign_maximum_tickets_per_campaign }}
+                                {% if form.campaign_maximum_tickets_per_campaign.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_maximum_tickets_per_campaign.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional: total para toda la campaña</div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.campaign_maximum_tickets_per_customer.label_tag }}
+                                {{ form.campaign_maximum_tickets_per_customer }}
+                                {% if form.campaign_maximum_tickets_per_customer.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_maximum_tickets_per_customer.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional: por cliente en toda la campaña</div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.campaign_maximum_tickets_per_invoice.label_tag }}
+                                {{ form.campaign_maximum_tickets_per_invoice }}
+                                {% if form.campaign_maximum_tickets_per_invoice.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.campaign_maximum_tickets_per_invoice.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Opcional: por factura individual</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuración de Tickets -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-ticket-alt me-2"></i>Configuración de Tickets
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_print_ticket }}
+                                    {{ form.campaign_print_ticket.label_tag }}
+                                    {% if form.campaign_print_ticket.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_print_ticket.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Permitir la impresión de tickets físicos</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-muted mb-3">Información a mostrar en el ticket:</h6>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_title }}
+                                    {{ form.campaign_ticket_title.label_tag }}
+                                    {% if form.campaign_ticket_title.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_title.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_award }}
+                                    {{ form.campaign_ticket_award.label_tag }}
+                                    {% if form.campaign_ticket_award.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_award.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_award_description }}
+                                    {{ form.campaign_ticket_award_description.label_tag }}
+                                    {% if form.campaign_ticket_award_description.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_award_description.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_validity_date }}
+                                    {{ form.campaign_ticket_validity_date.label_tag }}
+                                    {% if form.campaign_ticket_validity_date.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_validity_date.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_document_number }}
+                                    {{ form.campaign_ticket_document_number.label_tag }}
+                                    {% if form.campaign_ticket_document_number.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_document_number.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_names }}
+                                    {{ form.campaign_ticket_names.label_tag }}
+                                    {% if form.campaign_ticket_names.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_names.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_birth_day }}
+                                    {{ form.campaign_ticket_birth_day.label_tag }}
+                                    {% if form.campaign_ticket_birth_day.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_birth_day.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_cell_number }}
+                                    {{ form.campaign_ticket_cell_number.label_tag }}
+                                    {% if form.campaign_ticket_cell_number.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_cell_number.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_email }}
+                                    {{ form.campaign_ticket_email.label_tag }}
+                                    {% if form.campaign_ticket_email.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_email.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_ticket_regulatory_agency }}
+                                    {{ form.campaign_ticket_regulatory_agency.label_tag }}
+                                    {% if form.campaign_ticket_regulatory_agency.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_ticket_regulatory_agency.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-toggle-on me-2"></i>Estado
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.campaign_status }}
+                                    {{ form.campaign_status.label_tag }}
+                                    {% if form.campaign_status.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.campaign_status.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Marcar si la campaña está activa</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mostrar errores generales del formulario -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if is_edit %}{% url 'crm:campaign_detail' campaign.campaign_id %}{% else %}{% url 'crm:campaign_list' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if is_edit %}Actualizar Campaña{% else %}Crear Campaña{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Validación del formulario
+    $('.needs-validation').on('submit', function(e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+    });
+    
+    // Formatear valores monetarios
+    $('#id_campaign_minimum_purchase_value').on('input', function() {
+        var value = $(this).val().replace(/\D/g, '');
+        $(this).val(value);
+    });
+    
+    // Validación de fechas
+    $('#id_campaign_start_date, #id_campaign_end_date').on('change', function() {
+        var startDate = $('#id_campaign_start_date').val();
+        var endDate = $('#id_campaign_end_date').val();
+        
+        if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+            $(this).addClass('is-invalid');
+        } else {
+            $('#id_campaign_start_date, #id_campaign_end_date').removeClass('is-invalid');
+        }
+    });
+    
+    // Validación de horarios
+    $('#id_campaign_start_time_window, #id_campaign_end_time_window').on('change', function() {
+        var startTime = $('#id_campaign_start_time_window').val();
+        var endTime = $('#id_campaign_end_time_window').val();
+        
+        if (startTime && endTime && endTime <= startTime) {
+            $(this).addClass('is-invalid');
+        } else {
+            $('#id_campaign_start_time_window, #id_campaign_end_time_window').removeClass('is-invalid');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-card {
+        border-left: 4px solid #007bff;
+    }
+    
+    .status-indicator {
+        font-size: 1.1rem;
+        padding: 8px 16px;
+    }
+    
+    .validation-code {
+        font-family: 'Courier New', monospace;
+        font-size: 1.2rem;
+        font-weight: bold;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        border: 2px dashed #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'crm:ticket_list' %}">Tickets</a>
+                        </li>
+                        <li class="breadcrumb-item active">{{ ticket.ticket_number }}</li>
+                    </ol>
+                </nav>
+                <h2 class="mb-0">
+                    <i class="fas fa-ticket-alt me-2 text-primary"></i>{{ ticket.ticket_number }}
+                </h2>
+            </div>
+            <div>
+                <a href="{% url 'crm:ticket_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Volver
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Información Principal -->
+            <div class="col-md-8">
+                <div class="card info-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Información del Ticket
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Número de Ticket:</strong><br>
+                                <span class="fs-5 text-primary">{{ ticket.ticket_number }}</span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Código de Validación:</strong><br>
+                                <div class="validation-code text-center">
+                                    {{ ticket.ticket_validation_code }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Fecha de Registro:</strong><br>
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ ticket.ticket_registration_date|date:"d/m/Y H:i:s" }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Valor del Ticket:</strong><br>
+                                <span class="fs-5 text-success">
+                                    <i class="fas fa-dollar-sign me-1"></i>
+                                    ${{ ticket.ticket_value|floatformat:0 }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if ticket.ticket_is_printed %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <strong>Fecha de Impresión:</strong><br>
+                                    <i class="fas fa-print me-1"></i>
+                                    {{ ticket.ticket_print_date|date:"d/m/Y H:i:s" }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Información del Cliente -->
+                <div class="card info-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Cliente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Nombre Completo:</strong><br>
+                                <a href="{% url 'crm:customer_detail' ticket.ticket_customer.customer_id %}" 
+                                   class="text-decoration-none fs-5">
+                                    {{ ticket.ticket_customer.customer_first_name }} 
+                                    {% if ticket.ticket_customer.customer_middle_name %}
+                                        {{ ticket.ticket_customer.customer_middle_name }}
+                                    {% endif %}
+                                    {{ ticket.ticket_customer.customer_first_surname }}
+                                    {% if ticket.ticket_customer.customer_second_surname %}
+                                        {{ ticket.ticket_customer.customer_second_surname }}
+                                    {% endif %}
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Documento:</strong><br>
+                                {{ ticket.ticket_customer.customer_document_type.document_type_acronym }} 
+                                {{ ticket.ticket_customer.customer_document_number }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Teléfono:</strong><br>
+                                <i class="fas fa-phone me-1"></i>
+                                {{ ticket.ticket_customer.customer_cell_number }}
+                            </div>
+                            {% if ticket.ticket_customer.customer_email %}
+                            <div class="col-md-6 mb-3">
+                                <strong>Email:</strong><br>
+                                <i class="fas fa-envelope me-1"></i>
+                                {{ ticket.ticket_customer.customer_email }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="{% url 'crm:customer_tickets' ticket.ticket_customer.customer_id %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-ticket-alt me-1"></i>Ver todos los tickets del cliente
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de la Campaña -->
+                <div class="card info-card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bullhorn me-2"></i>Campaña
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <strong>Nombre de la Campaña:</strong><br>
+                                <a href="{% url 'crm:campaign_detail' ticket.ticket_campaign.campaign_id %}" 
+                                   class="text-decoration-none fs-5">
+                                    {{ ticket.ticket_campaign.campaign_name }}
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Tipo de Campaña:</strong><br>
+                                {% if ticket.ticket_campaign.campaign_type %}
+                                    {{ ticket.ticket_campaign.campaign_type.campaign_type_spanish_name }}
+                                {% else %}
+                                    <span class="text-muted">No especificado</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Estado:</strong><br>
+                                {% if ticket.ticket_campaign.is_active %}
+                                    <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactiva</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Fecha de Inicio:</strong><br>
+                                <i class="fas fa-play text-success me-1"></i>
+                                {{ ticket.ticket_campaign.campaign_start_date|date:"d/m/Y" }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Fecha de Fin:</strong><br>
+                                <i class="fas fa-stop text-danger me-1"></i>
+                                {{ ticket.ticket_campaign.campaign_end_date|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información de la Factura -->
+                <div class="card info-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice me-2"></i>Factura Asociada
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Número de Factura:</strong><br>
+                                <span class="fs-5">{{ ticket.ticket_invoice.invoice_campaign_invoice_number }}</span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Fecha de Factura:</strong><br>
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ ticket.ticket_invoice.invoice_campaign_invoice_date|date:"d/m/Y H:i" }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <strong>Valor Total:</strong><br>
+                                ${{ ticket.ticket_invoice.invoice_campaign_total_value|floatformat:0 }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <strong>Descuento:</strong><br>
+                                ${{ ticket.ticket_invoice.invoice_campaign_discount_value|floatformat:0 }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <strong>Valor Final:</strong><br>
+                                <span class="text-success fw-bold">
+                                    ${{ ticket.ticket_invoice.invoice_campaign_final_value|floatformat:0 }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <strong>Tickets Generados:</strong><br>
+                                <span class="badge bg-info fs-6">
+                                    {{ ticket.ticket_invoice.invoice_campaign_tickets_generated }} tickets
+                                </span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <strong>Factura Válida:</strong><br>
+                                {% if ticket.ticket_invoice.invoice_campaign_is_valid %}
+                                    <span class="badge bg-success">Válida</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No válida</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar de Estado y Acciones -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>Estado y Acciones
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Estados -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Estado del Ticket:</h6>
+                            
+                            <div class="mb-2">
+                                {% if ticket.ticket_is_winner %}
+                                    <span class="badge bg-warning status-indicator">
+                                        <i class="fas fa-trophy me-1"></i>Ticket Ganador
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary status-indicator">
+                                        <i class="fas fa-clock me-1"></i>Ticket Regular
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-2">
+                                {% if ticket.ticket_is_printed %}
+                                    <span class="badge bg-success status-indicator">
+                                        <i class="fas fa-print me-1"></i>Impreso
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary status-indicator">
+                                        <i class="fas fa-clock me-1"></i>Pendiente de Impresión
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                {% if ticket.ticket_status %}
+                                    <span class="badge bg-success status-indicator">
+                                        <i class="fas fa-check me-1"></i>Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger status-indicator">
+                                        <i class="fas fa-times me-1"></i>Inactivo
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'crm:ticket_print_preview' ticket.ticket_id %}" 
+                               class="btn btn-info"
+                               target="_blank">
+                                <i class="fas fa-eye me-1"></i>Vista Previa de Impresión
+                            </a>
+                            
+                            {% if not ticket.ticket_is_printed and ticket.ticket_campaign.campaign_print_ticket %}
+                                <a href="{% url 'crm:ticket_print' ticket.ticket_id %}" 
+                                   class="btn btn-success"
+                                   onclick="return confirm('¿Está seguro de marcar este ticket como impreso?')">
+                                    <i class="fas fa-print me-1"></i>Marcar como Impreso
+                                </a>
+                            {% endif %}
+                            
+                            {% if not ticket.ticket_is_winner %}
+                                <a href="{% url 'crm:ticket_mark_winner' ticket.ticket_id %}" 
+                                   class="btn btn-warning"
+                                   onclick="return confirm('¿Está seguro de marcar este ticket como ganador?')">
+                                    <i class="fas fa-trophy me-1"></i>Marcar como Ganador
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Adicional -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info me-2"></i>Información Adicional
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>ID del Ticket:</strong><br>{{ ticket.ticket_id }}</p>
+                        
+                        {% if ticket.ticket_campaign.campaign_award_title %}
+                            <p><strong>Premio de la Campaña:</strong><br>{{ ticket.ticket_campaign.campaign_award_title }}</p>
+                        {% endif %}
+                        
+                        <p><strong>Valor Mínimo de Compra:</strong><br>
+                            ${{ ticket.ticket_campaign.campaign_minimum_purchase_value|floatformat:0 }}
+                        </p>
+                        
+                        <p><strong>Multiplicador:</strong><br>
+                            x{{ ticket.ticket_campaign.campaign_ticket_multiplier }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - CRM UNAD{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1><i class="fas fa-chart-bar me-2"></i>Dashboard</h1>
+        <p class="text-muted">Resumen de estadísticas y métricas del CRM</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h3>{{ total_customers }}</h3>
+                <p>Total Clientes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-3x mb-3"></i>
+                <h3>0</h3>
+                <p>Clientes Activos</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-3x mb-3"></i>
+                <h3>0</h3>
+                <p>Ventas del Mes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-dollar-sign fa-3x mb-3"></i>
+                <h3>$0</h3>
+                <p>Ingresos del Mes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Próximas funcionalidades</h5>
+            </div>
+            <div class="card-body">
+                <p>El dashboard completo estará disponible próximamente con:</p>
+                <ul>
+                    <li>Gráficos interactivos de ventas</li>
+                    <li>Análisis de tendencias</li>
+                    <li>Métricas de rendimiento</li>
+                    <li>Reportes personalizables</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

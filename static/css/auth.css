@@ -1,0 +1,254 @@
+/* Authentication Styles */
+
+.auth-body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.auth-container {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-logo {
+    margin-bottom: 30px;
+}
+
+.auth-logo i {
+    color: #667eea;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.auth-title {
+    color: #333;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.auth-form {
+    margin-top: 20px;
+}
+
+.auth-form .form-control {
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    padding: 15px 20px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.auth-form .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    transform: translateY(-2px);
+}
+
+.auth-form .form-label {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.auth-form .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.auth-form .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.auth-form .btn-primary:active {
+    transform: translateY(0);
+}
+
+.form-check-input:checked {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.auth-footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+    color: white;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #74c0fc 0%, #339af0 100%);
+    color: white;
+}
+
+/* Password Toggle Button */
+.auth-form .btn-link {
+    color: #6c757d;
+    text-decoration: none;
+    border: none;
+    background: none;
+    padding: 0;
+}
+
+.auth-form .btn-link:hover {
+    color: #667eea;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 30px 20px;
+        margin: 20px;
+        border-radius: 15px;
+    }
+    
+    .auth-logo i {
+        font-size: 2rem;
+    }
+    
+    .auth-title {
+        font-size: 1.5rem;
+    }
+    
+    .form-control {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+}
+
+/* Loading States */
+.btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+/* Floating Labels Effect */
+.floating-label {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.floating-label input {
+    padding-top: 20px;
+}
+
+.floating-label label {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    color: #6c757d;
+}
+
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label {
+    top: 5px;
+    font-size: 12px;
+    color: #667eea;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .auth-card {
+        background: rgba(33, 37, 41, 0.95);
+        color: #fff;
+    }
+    
+    .auth-title {
+        color: #fff;
+    }
+    
+    .form-control {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .form-label {
+        color: #fff;
+    }
+}
+
+/* Accessibility Improvements */
+.auth-form input:focus {
+    outline: none;
+}
+
+.btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Animation for form validation */
+.was-validated .form-control:invalid {
+    animation: shake 0.5s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}

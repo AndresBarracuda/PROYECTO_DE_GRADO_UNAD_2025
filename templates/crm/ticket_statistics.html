@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas de Tickets - CRM UNAD{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        opacity: 0.7;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+    }
+    
+    .progress-custom {
+        height: 25px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-bar me-2 text-primary"></i>Estadísticas de Tickets
+                </h2>
+                <p class="text-muted mt-2">Dashboard completo del sistema de tickets</p>
+            </div>
+            <div>
+                <a href="{% url 'crm:ticket_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-1"></i>Ver Tickets
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="id_campaign" class="form-label">Campaña</label>
+                        <select name="campaign" id="id_campaign" class="form-select">
+                            <option value="">Todas las Campañas</option>
+                            {% for campaign in campaigns %}
+                                <option value="{{ campaign.campaign_id }}" 
+                                        {% if request.GET.campaign == campaign.campaign_id|stringformat:"s" %}selected{% endif %}>
+                                    {{ campaign.campaign_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="id_start_date" class="form-label">Fecha Inicio</label>
+                        <input type="date" name="start_date" id="id_start_date" 
+                               class="form-control" value="{{ request.GET.start_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="id_end_date" class="form-label">Fecha Fin</label>
+                        <input type="date" name="end_date" id="id_end_date" 
+                               class="form-control" value="{{ request.GET.end_date }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                            <a href="{% url 'crm:ticket_statistics' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Limpiar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Estadísticas Generales -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-number text-primary">{{ stats.total_tickets }}</div>
+                                <div class="text-muted">Total de Tickets</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-ticket-alt stat-icon text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-number text-warning">{{ stats.winner_tickets }}</div>
+                                <div class="text-muted">Tickets Ganadores</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-trophy stat-icon text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-number text-success">{{ stats.printed_tickets }}</div>
+                                <div class="text-muted">Tickets Impresos</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-print stat-icon text-success"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="card stat-card h-100">
+                    <div class="card-body text-center">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-number text-info">${{ stats.total_value|floatformat:0 }}</div>
+                                <div class="text-muted">Valor Total</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-dollar-sign stat-icon text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos y Estadísticas Detalladas -->
+        <div class="row">
+            <!-- Estadísticas por Estado -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>Estado de Tickets
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Tickets Ganadores</span>
+                                <span>{{ stats.winner_tickets }} / {{ stats.total_tickets }}</span>
+                            </div>
+                            <div class="progress progress-custom mb-2">
+                                <div class="progress-bar bg-warning" role="progressbar" 
+                                     style="width: {% if stats.total_tickets > 0 %}{{ stats.winner_percentage|floatformat:1 }}{% else %}0{% endif %}%" 
+                                     aria-valuenow="{{ stats.winner_percentage|floatformat:1 }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {% if stats.total_tickets > 0 %}{{ stats.winner_percentage|floatformat:1 }}%{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Tickets Impresos</span>
+                                <span>{{ stats.printed_tickets }} / {{ stats.total_tickets }}</span>
+                            </div>
+                            <div class="progress progress-custom mb-2">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {% if stats.total_tickets > 0 %}{{ stats.printed_percentage|floatformat:1 }}{% else %}0{% endif %}%" 
+                                     aria-valuenow="{{ stats.printed_percentage|floatformat:1 }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {% if stats.total_tickets > 0 %}{{ stats.printed_percentage|floatformat:1 }}%{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Tickets Activos</span>
+                                <span>{{ stats.active_tickets }} / {{ stats.total_tickets }}</span>
+                            </div>
+                            <div class="progress progress-custom">
+                                <div class="progress-bar bg-primary" role="progressbar" 
+                                     style="width: {% if stats.total_tickets > 0 %}{{ stats.active_percentage|floatformat:1 }}{% else %}0{% endif %}%" 
+                                     aria-valuenow="{{ stats.active_percentage|floatformat:1 }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {% if stats.total_tickets > 0 %}{{ stats.active_percentage|floatformat:1 }}%{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas por Campaña -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bullhorn me-2"></i>Tickets por Campaña
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if campaign_stats %}
+                            {% for stat in campaign_stats %}
+                                <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                                    <div>
+                                        <strong>{{ stat.campaign_name|truncatechars:30 }}</strong><br>
+                                        <small class="text-muted">{{ stat.total_tickets }} tickets</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-primary">Total: {{ stat.total_tickets }}</span><br>
+                                        {% if stat.winner_tickets > 0 %}
+                                            <span class="badge bg-warning">Ganadores: {{ stat.winner_tickets }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center">No hay datos de campañas disponibles</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribución por Fecha -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt me-2"></i>Distribución por Fecha
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if daily_stats %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Total Tickets</th>
+                                            <th>Ganadores</th>
+                                            <th>Impresos</th>
+                                            <th>Valor Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for day_stat in daily_stats %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    {{ day_stat.date|date:"d/m/Y" }}
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary">{{ day_stat.total_tickets }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if day_stat.winner_tickets > 0 %}
+                                                        <span class="badge bg-warning">{{ day_stat.winner_tickets }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">0</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if day_stat.printed_tickets > 0 %}
+                                                        <span class="badge bg-success">{{ day_stat.printed_tickets }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">0</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="text-success fw-bold">
+                                                        ${{ day_stat.total_value|floatformat:0 }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted text-center">No hay datos de fechas disponibles</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets Recientes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clock me-2"></i>Tickets Recientes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_tickets %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Número</th>
+                                            <th>Cliente</th>
+                                            <th>Campaña</th>
+                                            <th>Valor</th>
+                                            <th>Estado</th>
+                                            <th>Fecha</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ticket in recent_tickets %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ ticket.ticket_number }}</strong>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'crm:customer_detail' ticket.ticket_customer.customer_id %}" 
+                                                       class="text-decoration-none">
+                                                        {{ ticket.ticket_customer.customer_first_name }} 
+                                                        {{ ticket.ticket_customer.customer_first_surname }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'crm:campaign_detail' ticket.ticket_campaign.campaign_id %}" 
+                                                       class="text-decoration-none">
+                                                        {{ ticket.ticket_campaign.campaign_name|truncatechars:30 }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span class="text-success fw-bold">
+                                                        ${{ ticket.ticket_value|floatformat:0 }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {% if ticket.ticket_is_winner %}
+                                                        <span class="badge bg-warning">
+                                                            <i class="fas fa-trophy me-1"></i>Ganador
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if ticket.ticket_is_printed %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-print me-1"></i>Impreso
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if not ticket.ticket_status %}
+                                                        <span class="badge bg-danger">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ ticket.ticket_registration_date|date:"d/m/Y H:i" }}
+                                                    </small>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'crm:ticket_detail' ticket.ticket_id %}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No hay tickets recientes</h5>
+                                <p class="text-muted">Los tickets aparecerán aquí cuando se generen</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+    
+    .invoice-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .invoice-status-valid {
+        border-left-color: #28a745;
+    }
+    
+    .invoice-status-invalid {
+        border-left-color: #dc3545;
+    }
+    
+    .filter-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .invoice-value {
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .invoice-number {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        color: #007bff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-0">
+                    <i class="fas fa-file-invoice me-2 text-primary"></i>Gestión de Facturas
+                </h2>
+                <p class="text-muted mt-2">Administra las facturas registradas y genera tickets automáticamente</p>
+            </div>
+            <div>
+                <a href="{% url 'crm:invoice_search_customer' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>Registrar Nueva Factura
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card filter-card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Buscar</label>
+                        <input type="text" name="search" id="search" class="form-control" 
+                               value="{{ search_query }}" placeholder="Número de factura, cliente...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="campaign" class="form-label">Campaña</label>
+                        <select name="campaign" id="campaign" class="form-select">
+                            <option value="">Todas</option>
+                            {% for campaign in campaigns %}
+                                <option value="{{ campaign.campaign_id }}" 
+                                        {% if request.GET.campaign == campaign.campaign_id|stringformat:"s" %}selected{% endif %}>
+                                    {{ campaign.campaign_name|truncatechars:30 }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="payment_method" class="form-label">Método de Pago</label>
+                        <select name="payment_method" id="payment_method" class="form-select">
+                            <option value="">Todos</option>
+                            {% for method in payment_methods %}
+                                <option value="{{ method.payment_method_id }}" 
+                                        {% if request.GET.payment_method == method.payment_method_id|stringformat:"s" %}selected{% endif %}>
+                                    {{ method.payment_method_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="store" class="form-label">Local</label>
+                        <select name="store" id="store" class="form-select">
+                            <option value="">Todos</option>
+                            {% for store in stores %}
+                                <option value="{{ store.store_id }}" 
+                                        {% if request.GET.store == store.store_id|stringformat:"s" %}selected{% endif %}>
+                                    {{ store.store_code }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="date_from" class="form-label">Desde</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control" 
+                               value="{{ request.GET.date_from }}">
+                    </div>
+                    <div class="col-md-1">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resultados -->
+        {% if invoices %}
+            <!-- Resumen -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">
+                    Mostrando {{ invoices|length }} facturas
+                    {% if search_query or request.GET.campaign or request.GET.payment_method %}
+                        (filtradas)
+                    {% endif %}
+                </span>
+                <div class="btn-group btn-group-sm">
+                    <a href="?order=invoice_for_each_campaign_invoice__invoice_purchase_date" 
+                       class="btn btn-outline-secondary {% if request.GET.order == 'invoice_for_each_campaign_invoice__invoice_purchase_date' %}active{% endif %}">
+                        Más Antiguas
+                    </a>
+                    <a href="?order=-invoice_for_each_campaign_invoice__invoice_purchase_date" 
+                       class="btn btn-outline-secondary {% if request.GET.order == '-invoice_for_each_campaign_invoice__invoice_purchase_date' or not request.GET.order %}active{% endif %}">
+                        Más Recientes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Lista de Facturas -->
+            <div class="row">
+                {% for invoice in invoices %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card invoice-card h-100">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1 invoice-number">
+                                            {{ invoice.invoice_for_each_campaign_invoice.invoice_number|default:invoice.invoice_for_each_campaign_id }}
+                                        </h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ invoice.invoice_for_each_campaign_invoice.invoice_purchase_date|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success">Activa</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-body">
+                                <!-- Cliente -->
+                                <div class="mb-3">
+                                    <strong>Cliente:</strong><br>
+                                    <a href="{% url 'crm:customer_detail' invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_id %}" 
+                                       class="text-decoration-none">
+                                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_first_name }} 
+                                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_first_surname }}
+                                    </a><br>
+                                    <small class="text-muted">
+                                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_document_type.document_type_acronym }} 
+                                        {{ invoice.invoice_for_each_campaign_invoice.invoice_customer.customer_document_number }}
+                                    </small>
+                                </div>
+                                
+                                <!-- Campaña -->
+                                <div class="mb-3">
+                                    <strong>Campaña:</strong><br>
+                                    <a href="{% url 'crm:campaign_detail' invoice.invoice_for_each_campaign_campaign.campaign_id %}" 
+                                       class="text-decoration-none">
+                                        {{ invoice.invoice_for_each_campaign_campaign.campaign_name|truncatechars:40 }}
+                                    </a>
+                                </div>
+                                
+                                <!-- Valores -->
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted">Valor Total:</small><br>
+                                        <span class="invoice-value text-primary">
+                                            ${{ invoice.invoice_for_each_campaign_invoice.invoice_purchase_value|floatformat:0 }}
+                                        </span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted">Valor Final:</small><br>
+                                        <span class="invoice-value text-success">
+                                            ${{ invoice.invoice_for_each_campaign_invoice.invoice_purchase_value|floatformat:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Información adicional -->
+                                <div class="row">
+                                    <div class="col-6">
+                                        {% if invoice.invoice_for_each_campaign_invoice.invoice_payment_method %}
+                                            <small class="text-muted">
+                                                <i class="fas fa-credit-card me-1"></i>
+                                                {{ invoice.invoice_for_each_campaign_invoice.invoice_payment_method.payment_method_name }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-6">
+                                        {% if invoice.invoice_for_each_campaign_invoice.invoice_commercial_premise %}
+                                            <small class="text-muted">
+                                                <i class="fas fa-store me-1"></i>
+                                                {{ invoice.invoice_for_each_campaign_invoice.invoice_commercial_premise.commercial_premise_name }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-ticket-alt me-1"></i>
+                                            {% with tickets_count=invoice.invoice_for_each_campaign_invoice.invoice_customer.ticket_set.filter(ticket_campaign=invoice.invoice_for_each_campaign_campaign).count %}
+                                                {{ tickets_count }} ticket{{ tickets_count|pluralize:"s" }}
+                                            {% endwith %}
+                                        </span>
+                                    </div>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'crm:invoice_detail' invoice.invoice_for_each_campaign_id %}" 
+                                           class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'crm:invoice_edit' invoice.invoice_for_each_campaign_id %}" 
+                                           class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+                <nav aria-label="Navegación de facturas">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+
+        {% else %}
+            <!-- Estado vacío -->
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-file-invoice fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No hay facturas registradas</h4>
+                    <p class="text-muted mb-4">
+                        {% if search_query or request.GET.campaign or request.GET.payment_method %}
+                            No se encontraron facturas con los filtros aplicados.
+                        {% else %}
+                            Comienza registrando tu primera factura para generar tickets automáticamente.
+                        {% endif %}
+                    </p>
+                    {% if search_query or request.GET.campaign or request.GET.payment_method %}
+                        <a href="{% url 'crm:invoice_list' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i>Limpiar Filtros
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'crm:invoice_search_customer' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Registrar Primera Factura
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-submit del formulario al cambiar filtros
+    $('#campaign, #payment_method, #store').change(function() {
+        $(this).closest('form').submit();
+    });
+    
+    // Limpiar filtros
+    $('#search').on('keyup', function(e) {
+        if (e.keyCode === 13) {
+            $(this).closest('form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load group_tags %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-bullhorn me-2"></i>{{ page_title }}</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user|has_any_group:"Admin,operator" %}
+        <a href="{% url 'crm:campaign_edit' campaign.campaign_id %}" class="btn btn-warning">
+            <i class="fas fa-edit me-2"></i>Editar
+        </a>
+        {% endif %}
+        <a href="{% url 'crm:campaign_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Información Principal -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Información de la Campaña
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <h3 class="text-primary">{{ campaign.campaign_name }}</h3>
+                        {% if campaign.campaign_type %}
+                            <span class="badge bg-secondary fs-6">{{ campaign.campaign_type }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if campaign.campaign_award_title %}
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <h5 class="text-success">
+                            <i class="fas fa-trophy me-2"></i>{{ campaign.campaign_award_title }}
+                        </h5>
+                        {% if campaign.campaign_award_description %}
+                            <p class="text-muted">{{ campaign.campaign_award_description }}</p>
+                        {% endif %}
+                    </div>
+                    {% if campaign.campaign_image %}
+                    <div class="col-md-4 text-center">
+                        <img src="{{ campaign.campaign_image.url }}" 
+                             alt="Imagen de {{ campaign.campaign_name }}" 
+                             class="img-fluid rounded shadow"
+                             style="max-height: 200px; object-fit: cover;">
+                        <small class="d-block text-muted mt-1">Imagen de la campaña</small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Fechas de la Campaña</h6>
+                        <p>
+                            <i class="fas fa-play text-success me-2"></i>
+                            <strong>Inicio:</strong> {{ campaign.campaign_start_date|date:"d/m/Y" }}
+                            <br>
+                            <i class="fas fa-stop text-danger me-2"></i>
+                            <strong>Fin:</strong> {{ campaign.campaign_end_date|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Horarios</h6>
+                        <p>
+                            <i class="fas fa-clock me-2"></i>
+                            {{ campaign.campaign_start_time_window }} - {{ campaign.campaign_end_time_window }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Participación -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>Configuración de Participación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Valor Mínimo de Compra</h6>
+                        <h4 class="text-success">${{ campaign.campaign_minimum_purchase_value|floatformat:0 }}</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Multiplicador de Tickets</h6>
+                        <h4 class="text-info">x{{ campaign.campaign_ticket_multiplier }}</h4>
+                        <small class="text-muted">Tickets por cada valor mínimo</small>
+                    </div>
+                </div>
+                
+                {% if campaign.campaign_maximum_tickets_per_campaign or campaign.campaign_maximum_tickets_per_customer or campaign.campaign_maximum_tickets_per_invoice %}
+                <hr>
+                <h6 class="text-muted mb-3">Límites de Participación</h6>
+                <div class="row">
+                    {% if campaign.campaign_maximum_tickets_per_campaign %}
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="text-warning">{{ campaign.campaign_maximum_tickets_per_campaign }}</h5>
+                            <small class="text-muted">Máximo por campaña</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if campaign.campaign_maximum_tickets_per_customer %}
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="text-info">{{ campaign.campaign_maximum_tickets_per_customer }}</h5>
+                            <small class="text-muted">Máximo por cliente</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if campaign.campaign_maximum_tickets_per_invoice %}
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h5 class="text-secondary">{{ campaign.campaign_maximum_tickets_per_invoice }}</h5>
+                            <small class="text-muted">Máximo por factura</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel Lateral -->
+    <div class="col-md-4">
+        <!-- Estado de la Campaña -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Estado de la Campaña
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                {% if campaign.is_active %}
+                    <div class="mb-3">
+                        <i class="fas fa-play fa-3x text-success"></i>
+                    </div>
+                    <h4 class="text-success">ACTIVA</h4>
+                    {% if campaign.days_remaining > 0 %}
+                        <p class="text-muted">{{ campaign.days_remaining }} día{{ campaign.days_remaining|pluralize }} restante{{ campaign.days_remaining|pluralize }}</p>
+                    {% else %}
+                        <p class="text-warning">Último día</p>
+                    {% endif %}
+                {% elif campaign.campaign_status %}
+                    <div class="mb-3">
+                        <i class="fas fa-pause fa-3x text-warning"></i>
+                    </div>
+                    <h4 class="text-warning">PROGRAMADA</h4>
+                    <p class="text-muted">Iniciará el {{ campaign.campaign_start_date|date:"d/m/Y" }}</p>
+                {% else %}
+                    <div class="mb-3">
+                        <i class="fas fa-ban fa-3x text-secondary"></i>
+                    </div>
+                    <h4 class="text-secondary">INACTIVA</h4>
+                    <p class="text-muted">La campaña está deshabilitada</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Días Habilitados -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-week me-2"></i>Días Habilitados
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for day in campaign.get_enabled_days %}
+                    <div class="col-6 mb-2">
+                        <span class="badge bg-primary w-100">{{ day }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if not campaign.get_enabled_days %}
+                    <p class="text-muted text-center">No hay días habilitados</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-12 mb-3">
+                        <h4 class="text-primary">{{ campaign.campaign_invoices_number }}</h4>
+                        <small class="text-muted">Facturas acumuladas</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted mb-2">Información del Sistema</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            <strong>Creada:</strong> {{ campaign.campaign_registration_date|date:"d/m/Y H:i" }}
+                            <br>
+                            <i class="fas fa-edit me-1"></i>
+                            <strong>Actualizada:</strong> {{ campaign.campaign_date_update|date:"d/m/Y H:i" }}
+                            <br>
+                            <i class="fas fa-hashtag me-1"></i>
+                            <strong>ID:</strong> {{ campaign.campaign_id }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

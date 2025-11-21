@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load group_tags %}
+
+{% block title %}Inicio - CRM UNAD{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="jumbotron bg-gradient-primary text-white p-5 rounded">
+            <div class="container text-center">
+                <h1 class="display-4">
+                    <i class="fas fa-handshake me-3"></i>
+                    Bienvenido al CRM UNAD
+                </h1>
+                <p class="lead">Sistema de Gestión de Relaciones con Clientes</p>
+                <p class="mb-4">Gestiona eficientemente tus clientes, ventas y relaciones comerciales</p>
+                <a class="btn btn-light btn-lg me-3" href="{% url 'crm:customer_list' %}">
+                    <i class="fas fa-users me-2"></i>Ver Clientes
+                </a>
+                <a class="btn btn-outline-light btn-lg" href="{% url 'crm:dashboard' %}">
+                    <i class="fas fa-chart-line me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Cards -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-4">
+            <i class="fas fa-star me-2"></i>Características Principales
+        </h2>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-users fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Gestión de Clientes</h5>
+                <p class="card-text">
+                    Administra toda la información de tus clientes de manera centralizada. 
+                    Controla datos personales, historial de compras y preferencias.
+                </p>
+                <a href="{% url 'crm:customer_list' %}" class="btn btn-primary">
+                    <i class="fas fa-arrow-right me-1"></i>Ver Clientes
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-chart-bar fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Análisis y Reportes</h5>
+                <p class="card-text">
+                    Obtén insights valiosos sobre tu negocio con dashboards interactivos 
+                    y reportes detallados de ventas y rendimiento.
+                </p>
+                <a href="{% url 'crm:dashboard' %}" class="btn btn-success">
+                    <i class="fas fa-chart-line me-1"></i>Ver Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if user|has_group:"Admin" %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-cogs fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">Administración</h5>
+                <p class="card-text">
+                    Panel de administración completo para gestionar usuarios, 
+                    configuraciones del sistema y importar/exportar datos.
+                </p>
+                <a href="/admin/" class="btn btn-warning text-dark">
+                    <i class="fas fa-tools me-1"></i>Administrar
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h3 class="text-center mb-4">
+            <i class="fas fa-tachometer-alt me-2"></i>Estadísticas Rápidas
+        </h3>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h4 id="total-customers">-</h4>
+                <p class="card-text">Total Clientes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-2x mb-2"></i>
+                <h4 id="active-customers">-</h4>
+                <p class="card-text">Clientes Activos</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-plus fa-2x mb-2"></i>
+                <h4 id="new-customers">-</h4>
+                <p class="card-text">Nuevos este Mes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <h4 id="growth-rate">-</h4>
+                <p class="card-text">Crecimiento</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if user|has_any_group:"Admin,operator" %}
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'crm:customer_add' %}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="fas fa-user-plus fa-2x d-block mb-2"></i>
+                            <strong>Agregar Cliente</strong>
+                            <br><small>Registrar nuevo cliente en el sistema</small>
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'crm:customer_list' %}" class="btn btn-outline-info w-100 py-3">
+                            <i class="fas fa-search fa-2x d-block mb-2"></i>
+                            <strong>Buscar Cliente</strong>
+                            <br><small>Encontrar y gestionar clientes existentes</small>
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'crm:campaign_list' %}" class="btn btn-outline-warning w-100 py-3">
+                            <i class="fas fa-bullhorn fa-2x d-block mb-2"></i>
+                            <strong>Ver Campañas</strong>
+                            <br><small>Gestionar campañas promocionales</small>
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'crm:campaign_list' %}" class="btn btn-outline-warning w-100 py-3">
+                            <i class="fas fa-bullhorn fa-2x d-block mb-2"></i>
+                            <strong>Git Hub</strong>
+                            <br><small>Ver repositorio en GitHub</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Cargar estadísticas reales desde el servidor
+    $.ajax({
+        url: '{% url "crm:get_stats" %}',
+        method: 'GET',
+        success: function(data) {
+            $('#total-customers').text(data.total_customers);
+            $('#active-customers').text(data.active_customers);
+            $('#new-customers').text(data.new_customers);
+            $('#growth-rate').text(data.growth_rate);
+        },
+        error: function() {
+            // Si hay error, mostrar valores por defecto
+            $('#total-customers').text('0');
+            $('#active-customers').text('0');
+            $('#new-customers').text('0');
+            $('#growth-rate').text('0%');
+        }
+    });
+});
+</script>
+{% endblock %}

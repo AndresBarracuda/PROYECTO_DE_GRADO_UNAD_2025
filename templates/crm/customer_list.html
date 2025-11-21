@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load group_tags %}
+
+{% block title %}Clientes - CRM UNAD{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-users me-2"></i>Lista de Clientes</h1>
+        <p class="text-muted">Gestiona todos tus clientes desde aquí</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user|has_any_group:"Admin,operator" %}
+        <a href="{% url 'crm:customer_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Agregar Cliente
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" class="d-flex">
+            <input type="text" class="form-control me-2" name="search" 
+                   placeholder="Buscar clientes..." value="{{ search_query }}">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if customers %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Teléfono</th>
+                                    <th>Documento</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for customer in customers %}
+                                <tr>
+                                    <td>{{ customer.customer_id }}</td>
+                                    <td>
+                                        <strong>{{ customer.customer_first_name }} {{ customer.customer_first_surname }}</strong>
+                                    </td>
+                                    <td>{{ customer.customer_email|default:"-" }}</td>
+                                    <td>{{ customer.customer_cell_number|default:"-" }}</td>
+                                    <td>{{ customer.customer_document_number }}</td>
+                                    <td>{{ customer.customer_registration_date|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'crm:customer_detail' customer.customer_id %}" 
+                                           class="btn btn-sm btn-outline-info" title="Ver detalles">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if user|has_any_group:"Admin,operator" %}
+                                        <a href="{% url 'crm:customer_edit' customer.customer_id %}" 
+                                           class="btn btn-sm btn-outline-warning" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginación -->
+                    {% if customers.has_other_pages %}
+                    <nav aria-label="Paginación de clientes">
+                        <ul class="pagination justify-content-center">
+                            {% if customers.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">Primera</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ customers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Anterior</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Página {{ customers.number }} de {{ customers.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if customers.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ customers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Siguiente</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ customers.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Última</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4>No hay clientes registrados</h4>
+                    <p class="text-muted">
+                        {% if search_query %}
+                            No se encontraron clientes que coincidan con "{{ search_query }}"
+                        {% else %}
+                            Comienza agregando tu primer cliente al sistema
+                        {% endif %}
+                    </p>
+                    {% if not search_query %}
+                        <a href="{% url 'crm:customer_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Agregar Primer Cliente
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

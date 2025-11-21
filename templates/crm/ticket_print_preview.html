@@ -1,0 +1,411 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket {{ ticket.ticket_number }} - CRM UNAD</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .ticket-container {
+                width: 100%;
+                max-width: none;
+                margin: 0;
+                page-break-inside: avoid;
+            }
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .ticket-container {
+            max-width: 400px;
+            margin: 20px auto;
+            background: white;
+            border: 2px dashed #007bff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ticket-container::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(45deg, #007bff, #28a745);
+            z-index: -1;
+            border-radius: 20px;
+        }
+        
+        .ticket-header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .ticket-logo {
+            font-size: 2.5rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .ticket-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        
+        .ticket-subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin: 5px 0 0 0;
+        }
+        
+        .ticket-number {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .validation-code {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            padding: 8px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .ticket-info {
+            margin: 15px 0;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            color: #333;
+            text-align: right;
+        }
+        
+        .ticket-value {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .campaign-info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .campaign-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        
+        .campaign-details {
+            font-size: 0.9rem;
+            color: #424242;
+            line-height: 1.4;
+        }
+        
+        .customer-info {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .customer-name {
+            font-weight: bold;
+            color: #f57c00;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .customer-details {
+            font-size: 0.9rem;
+            color: #424242;
+            line-height: 1.4;
+        }
+        
+        .ticket-footer {
+            text-align: center;
+            border-top: 2px solid #007bff;
+            padding-top: 15px;
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .qr-placeholder {
+            width: 80px;
+            height: 80px;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            border-radius: 5px;
+            color: #999;
+        }
+        
+        .winner-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(45deg, #ffc107, #ff8f00);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transform: rotate(15deg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .printed-stamp {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg);
+            border: 3px solid #dc3545;
+            color: #dc3545;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        
+        .action-buttons {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .action-buttons .btn {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid no-print">
+        <!-- Botones de Acción -->
+        <div class="action-buttons">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print me-1"></i>Imprimir Ticket
+            </button>
+            <a href="{% url 'crm:ticket_detail' ticket.ticket_id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Volver al Detalle
+            </a>
+            <a href="{% url 'crm:ticket_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-1"></i>Lista de Tickets
+            </a>
+        </div>
+    </div>
+
+    <!-- Ticket Container -->
+    <div class="ticket-container">
+        <!-- Sello de Ganador (si aplica) -->
+        {% if ticket.ticket_is_winner %}
+            <div class="winner-badge">
+                <i class="fas fa-trophy me-1"></i>GANADOR
+            </div>
+        {% endif %}
+        
+        <!-- Sello de Impreso (si aplica) -->
+        {% if ticket.ticket_is_printed %}
+            <div class="printed-stamp">
+                IMPRESO
+            </div>
+        {% endif %}
+        
+        <!-- Header -->
+        <div class="ticket-header">
+            <div class="ticket-logo">
+                <i class="fas fa-university"></i>
+            </div>
+            <h2 class="ticket-title">CRM UNAD</h2>
+            <p class="ticket-subtitle">Ticket de Participación</p>
+        </div>
+        
+        <!-- Número de Ticket -->
+        <div class="ticket-number">
+            {{ ticket.ticket_number }}
+        </div>
+        
+        <!-- Código de Validación -->
+        <div class="validation-code">
+            {{ ticket.ticket_validation_code }}
+        </div>
+        
+        <!-- Información del Ticket -->
+        <div class="ticket-info">
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="fas fa-calendar me-1"></i>Fecha de Registro:
+                </span>
+                <span class="info-value">{{ ticket.ticket_registration_date|date:"d/m/Y H:i" }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="fas fa-hashtag me-1"></i>ID Ticket:
+                </span>
+                <span class="info-value">{{ ticket.ticket_id }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="fas fa-file-invoice me-1"></i>Factura:
+                </span>
+                <span class="info-value">{{ ticket.ticket_invoice.invoice_campaign_invoice_number }}</span>
+            </div>
+            
+            {% if ticket.ticket_is_printed %}
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="fas fa-print me-1"></i>Fecha de Impresión:
+                </span>
+                <span class="info-value">{{ ticket.ticket_print_date|date:"d/m/Y H:i" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Valor del Ticket -->
+        <div class="ticket-value">
+            <i class="fas fa-dollar-sign me-1"></i>${{ ticket.ticket_value|floatformat:0 }}
+        </div>
+        
+        <!-- Información de la Campaña -->
+        <div class="campaign-info">
+            <div class="campaign-title">
+                <i class="fas fa-bullhorn me-2"></i>{{ ticket.ticket_campaign.campaign_name }}
+            </div>
+            <div class="campaign-details">
+                <strong>Período:</strong> {{ ticket.ticket_campaign.campaign_start_date|date:"d/m/Y" }} - {{ ticket.ticket_campaign.campaign_end_date|date:"d/m/Y" }}<br>
+                
+                {% if ticket.ticket_campaign.campaign_award_title %}
+                    <strong>Premio:</strong> {{ ticket.ticket_campaign.campaign_award_title }}<br>
+                {% endif %}
+                
+                <strong>Compra Mínima:</strong> ${{ ticket.ticket_campaign.campaign_minimum_purchase_value|floatformat:0 }}
+            </div>
+        </div>
+        
+        <!-- Información del Cliente -->
+        <div class="customer-info">
+            <div class="customer-name">
+                <i class="fas fa-user me-2"></i>
+                {{ ticket.ticket_customer.customer_first_name }} 
+                {% if ticket.ticket_customer.customer_middle_name %}
+                    {{ ticket.ticket_customer.customer_middle_name }}
+                {% endif %}
+                {{ ticket.ticket_customer.customer_first_surname }}
+                {% if ticket.ticket_customer.customer_second_surname %}
+                    {{ ticket.ticket_customer.customer_second_surname }}
+                {% endif %}
+            </div>
+            <div class="customer-details">
+                <strong>Documento:</strong> {{ ticket.ticket_customer.customer_document_type.document_type_acronym }} {{ ticket.ticket_customer.customer_document_number }}<br>
+                <strong>Teléfono:</strong> {{ ticket.ticket_customer.customer_cell_number }}<br>
+                {% if ticket.ticket_customer.customer_email %}
+                    <strong>Email:</strong> {{ ticket.ticket_customer.customer_email }}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- QR Code Placeholder -->
+        <div class="qr-placeholder">
+            <i class="fas fa-qrcode fa-2x"></i>
+        </div>
+        
+        <!-- Footer -->
+        <div class="ticket-footer">
+            <p><strong>¡Conserve este ticket para participar!</strong></p>
+            <p>Válido únicamente para la campaña mencionada</p>
+            <p>CRM UNAD - Sistema de Gestión de Relaciones con Clientes</p>
+            <p><small>Generado el {{ ticket.ticket_registration_date|date:"d/m/Y" }} a las {{ ticket.ticket_registration_date|date:"H:i:s" }}</small></p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Auto-focus para impresión si se especifica en la URL
+        if (window.location.search.includes('print=true')) {
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
+        }
+    </script>
+</body>
+</html>

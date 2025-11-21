@@ -1,0 +1,939 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+{% block extra_css %}
+<style>
+    .form-section {
+        border-left: 4px solid #007bff;
+        padding-left: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .required-field {
+        color: #dc3545;
+    }
+    
+    /* Estilos para la firma electrónica - simplificados */
+    .signature-container {
+        position: relative;
+    }
+    
+    .signature-preview {
+        border: 2px dashed #28a745;
+        border-radius: 8px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        margin-top: 10px;
+    }
+    
+    #signatureCanvas {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .signature-controls .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .signature-controls .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Animación para el modal */
+    .modal.fade .modal-dialog {
+        transition: transform 0.3s ease-out;
+        transform: translate(0, -50px);
+    }
+    
+    .modal.show .modal-dialog {
+        transform: none;
+    }
+    
+    /* Responsivo para el canvas */
+    @media (max-width: 768px) {
+        #signatureCanvas {
+            width: 100%;
+            height: auto;
+            max-width: 500px;
+        }
+        
+        .signature-pad-container {
+            padding: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user me-2"></i>{{ page_title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Información Personal -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-user me-2"></i>Información Personal
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_first_name.label_tag }}
+                                {{ form.customer_first_name }}
+                                {% if form.customer_first_name.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_first_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_middle_name.label_tag }}
+                                {{ form.customer_middle_name }}
+                                {% if form.customer_middle_name.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_middle_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_first_surname.label_tag }}
+                                {{ form.customer_first_surname }}
+                                {% if form.customer_first_surname.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_first_surname.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_second_surname.label_tag }}
+                                {{ form.customer_second_surname }}
+                                {% if form.customer_second_surname.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_second_surname.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_gender.label_tag }}
+                                {{ form.customer_gender }}
+                                {% if form.customer_gender.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_gender.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_date_birth.label_tag }}
+                                {{ form.customer_date_birth }}
+                                {% if form.customer_date_birth.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_date_birth.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_blood_type.label_tag }}
+                                {{ form.customer_blood_type }}
+                                {% if form.customer_blood_type.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_blood_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documento de Identidad -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-id-card me-2"></i>Documento de Identidad
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_document_type.label_tag }}
+                                {{ form.customer_document_type }}
+                                {% if form.customer_document_type.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_document_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-8 mb-3">
+                                {{ form.customer_document_number.label_tag }}
+                                {{ form.customer_document_number }}
+                                {% if form.customer_document_number.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_document_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Contacto -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-phone me-2"></i>Información de Contacto
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_cell_number.label_tag }}
+                                {{ form.customer_cell_number }}
+                                {% if form.customer_cell_number.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_cell_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_landline_number.label_tag }}
+                                {{ form.customer_landline_number }}
+                                {% if form.customer_landline_number.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_landline_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.customer_email.label_tag }}
+                                {{ form.customer_email }}
+                                {% if form.customer_email.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_email.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Ubicación -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i>Información de Ubicación
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_neighborhood.label_tag }}
+                                {{ form.customer_neighborhood }}
+                                {% if form.customer_neighborhood.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_neighborhood.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_residence_address_select.label_tag }}
+                                {{ form.customer_residence_address_select }}
+                                {% if form.customer_residence_address_select.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_residence_address_select.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                {{ form.customer_residence_address_part_one.label_tag }}
+                                {{ form.customer_residence_address_part_one }}
+                                {% if form.customer_residence_address_part_one.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_residence_address_part_one.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                {{ form.customer_residence_address_part_two.label_tag }}
+                                {{ form.customer_residence_address_part_two }}
+                                {% if form.customer_residence_address_part_two.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_residence_address_part_two.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                {{ form.customer_residence_address_part_three.label_tag }}
+                                {{ form.customer_residence_address_part_three }}
+                                {% if form.customer_residence_address_part_three.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_residence_address_part_three.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                {{ form.customer_residence_address_supplementary_part.label_tag }}
+                                {{ form.customer_residence_address_supplementary_part }}
+                                {% if form.customer_residence_address_supplementary_part.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_residence_address_supplementary_part.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información Adicional -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Información Adicional
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_social_class.label_tag }}
+                                {{ form.customer_social_class }}
+                                {% if form.customer_social_class.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_social_class.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_marital_status.label_tag }}
+                                {{ form.customer_marital_status }}
+                                {% if form.customer_marital_status.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_marital_status.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_health_plan.label_tag }}
+                                {{ form.customer_health_plan }}
+                                {% if form.customer_health_plan.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_health_plan.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.customer_occupation.label_tag }}
+                                {{ form.customer_occupation }}
+                                {% if form.customer_occupation.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_occupation.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Redes Sociales -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-share-alt me-2"></i>Redes Sociales
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_facebook }}
+                                    {{ form.customer_facebook.label_tag }}
+                                    {% if form.customer_facebook.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_facebook.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_instagram }}
+                                    {{ form.customer_instagram.label_tag }}
+                                    {% if form.customer_instagram.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_instagram.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_twitter }}
+                                    {{ form.customer_twitter.label_tag }}
+                                    {% if form.customer_twitter.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_twitter.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_whatsapp }}
+                                    {{ form.customer_whatsapp.label_tag }}
+                                    {% if form.customer_whatsapp.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_whatsapp.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferencias de Notificación -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-bell me-2"></i>Preferencias de Notificación
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_notifications_email }}
+                                    {{ form.customer_notifications_email.label_tag }}
+                                    {% if form.customer_notifications_email.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_notifications_email.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_notifications_cell }}
+                                    {{ form.customer_notifications_cell.label_tag }}
+                                    {% if form.customer_notifications_cell.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_notifications_cell.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_notifications_residence_address }}
+                                    {{ form.customer_notifications_residence_address.label_tag }}
+                                    {% if form.customer_notifications_residence_address.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_notifications_residence_address.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información Familiar -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-home me-2"></i>Información Familiar
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_children_sw }}
+                                    {{ form.customer_children_sw.label_tag }}
+                                    {% if form.customer_children_sw.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_children_sw.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                {{ form.customer_children_number.label_tag }}
+                                {{ form.customer_children_number }}
+                                {% if form.customer_children_number.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_children_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_vehicles_sw }}
+                                    {{ form.customer_vehicles_sw.label_tag }}
+                                    {% if form.customer_vehicles_sw.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_vehicles_sw.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_pets_sw }}
+                                    {{ form.customer_pets_sw.label_tag }}
+                                    {% if form.customer_pets_sw.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_pets_sw.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contacto de Emergencia -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Contacto de Emergencia
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_emergency_contact_names.label_tag }}
+                                {{ form.customer_emergency_contact_names }}
+                                {% if form.customer_emergency_contact_names.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_emergency_contact_names.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_emergency_contact_surnames.label_tag }}
+                                {{ form.customer_emergency_contact_surnames }}
+                                {% if form.customer_emergency_contact_surnames.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_emergency_contact_surnames.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                {{ form.customer_emergency_contact_number.label_tag }}
+                                {{ form.customer_emergency_contact_number }}
+                                {% if form.customer_emergency_contact_number.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_emergency_contact_number.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Firma Digital -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-signature me-2"></i>Firma Digital
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_signature_option.label_tag }}
+                                {{ form.customer_signature_option }}
+                                {% if form.customer_signature_option.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_signature_option.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_signature_desc.label_tag }}
+                                {{ form.customer_signature_desc }}
+                                {% if form.customer_signature_desc.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_signature_desc.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Botón y Canvas para Firma Electrónica -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <div class="signature-container">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-pen-fancy me-2"></i>Firma Electrónica
+                                        </label>
+                                        <div class="signature-controls">
+                                            <button type="button" class="btn btn-primary btn-sm" id="openSignatureBtn">
+                                                <i class="fas fa-signature me-2"></i>Firmar
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="clearSignatureBtn" style="display: none;">
+                                                <i class="fas fa-eraser me-2"></i>Limpiar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Preview de la firma -->
+                                    <div id="signaturePreview" class="signature-preview" style="display: none;">
+                                        <div class="border rounded p-3 bg-light">
+                                            <img id="signatureImage" src="" alt="Firma" class="img-fluid" style="max-height: 100px;">
+                                            <p class="text-muted small mb-0 mt-2">
+                                                <i class="fas fa-check-circle text-success me-1"></i>
+                                                Firma capturada exitosamente
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Campo oculto para almacenar la firma JSON -->
+                                    <input type="hidden" id="signatureData" name="signature_data" value="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+<!-- Modal para Firma Electrónica -->
+<div class="modal fade" id="signatureModal" tabindex="-1" aria-labelledby="signatureModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="signatureModalLabel">
+                    <i class="fas fa-signature me-2"></i>Firma Electrónica
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <p class="text-muted">Por favor, dibuje su firma en el área a continuación</p>
+                </div>
+                
+                <!-- Canvas para la firma -->
+                <div class="text-center p-3">
+                    <canvas id="signatureCanvas" 
+                            width="600" 
+                            height="200"
+                            style="border: 2px solid #007bff; 
+                                   background: white; 
+                                   cursor: crosshair;
+                                   border-radius: 5px;">
+                        Su navegador no soporta canvas HTML5
+                    </canvas>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Use el mouse o pantalla táctil para dibujar su firma
+                    </small>
+                    <br>
+                    <button type="button" class="btn btn-sm btn-info mt-2" onclick="testCanvas()">
+                        <i class="fas fa-test me-1"></i>Probar Canvas
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="clearCanvasBtn">
+                    <i class="fas fa-eraser me-2"></i>Limpiar Canvas
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="saveSignatureBtn">
+                    <i class="fas fa-save me-2"></i>Guardar Firma
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+                    <!-- Configuraciones del Sistema -->
+                    <div class="form-section">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-cogs me-2"></i>Configuraciones del Sistema
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.customer_covenant.label_tag }}
+                                {{ form.customer_covenant }}
+                                {% if form.customer_covenant.errors %}
+                                    <div class="text-danger small">
+                                        {{ form.customer_covenant.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_internal }}
+                                    {{ form.customer_internal.label_tag }}
+                                    {% if form.customer_internal.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_internal.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.customer_status }}
+                                    {{ form.customer_status.label_tag }}
+                                    {% if form.customer_status.errors %}
+                                        <div class="text-danger small">
+                                            {{ form.customer_status.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Marcar si el cliente está activo en el sistema</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if is_edit %}{% url 'crm:customer_detail' customer.customer_id %}{% else %}{% url 'crm:customer_list' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if is_edit %}Actualizar Cliente{% else %}Guardar Cliente{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ===== SIGNATURE PAD IMPLEMENTATION =====
+let signaturePad;
+
+function initSignaturePad() {
+    // Abrir modal de firma
+    $('#openSignatureBtn').on('click', function() {
+        $('#signatureModal').modal('show');
+    });
+    
+    // Setup SignaturePad cuando se abre el modal
+    $('#signatureModal').on('shown.bs.modal', function() {
+        setTimeout(function() {
+            initializeSignaturePad();
+        }, 300);
+    });
+    
+    // Redimensionar cuando cambie el tamaño de ventana
+    $(window).resize(function() {
+        if (signaturePad) {
+            resizeSignatureCanvas();
+        }
+    });
+    
+    // Limpiar canvas
+    $('#clearCanvasBtn').on('click', function() {
+        clearSignature();
+    });
+    
+    // Limpiar firma guardada
+    $('#clearSignatureBtn').on('click', function() {
+        clearSavedSignature();
+    });
+    
+    // Guardar firma
+    $('#saveSignatureBtn').on('click', function() {
+        saveSignature();
+    });
+}
+
+function initializeSignaturePad() {
+    const canvas = document.getElementById('signatureCanvas');
+    if (!canvas) {
+        console.error('Canvas no encontrado');
+        return;
+    }
+    
+    // Limpiar cualquier instancia anterior
+    if (signaturePad) {
+        signaturePad.clear();
+    }
+    
+    // Crear nueva instancia de SignaturePad
+    signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(0, 0, 0)',
+        velocityFilterWeight: 0.1,
+        minWidth: 1,
+        maxWidth: 3,
+        throttle: 0,
+        minPointDistance: 5
+    });
+    
+    // Redimensionar canvas para alta resolución
+    resizeSignatureCanvas();
+    
+    console.log('SignaturePad inicializado correctamente');
+}
+
+function resizeSignatureCanvas() {
+    const canvas = document.getElementById('signatureCanvas');
+    if (!canvas || !signaturePad) return;
+    
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+    
+    signaturePad.clear(); // Necessary after resize
+}
+
+function clearSignature() {
+    if (signaturePad) {
+        signaturePad.clear();
+        console.log('SignaturePad limpiado');
+    }
+}
+
+function clearSavedSignature() {
+    if (signaturePad) {
+        signaturePad.clear();
+    }
+    $('#signatureData').val('');
+    $('#signature-preview').html('<p class="text-muted">No hay firma</p>');
+    console.log('Firma guardada eliminada');
+}
+
+function saveSignature() {
+    if (!signaturePad) {
+        alert('Error: SignaturePad no está inicializado');
+        return;
+    }
+    
+    if (signaturePad.isEmpty()) {
+        alert('Por favor, dibuje una firma antes de guardar');
+        return;
+    }
+    
+    try {
+        // Obtener datos de la firma
+        const signatureDataURL = signaturePad.toDataURL('image/png');
+        const signaturePoints = signaturePad.toData();
+        
+        // Crear objeto de datos
+        const data = {
+            imageData: signatureDataURL,
+            pointsData: signaturePoints,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Guardar en campo hidden
+        $('#signatureData').val(JSON.stringify(data));
+        console.log('DEBUG: Firma guardada en campo hidden:', data);
+        
+        // Mostrar preview
+        showSignaturePreview(signatureDataURL);
+        
+        // Cerrar modal
+        $('#signatureModal').modal('hide');
+        
+        alert('Firma guardada exitosamente');
+        
+    } catch (error) {
+        console.error('Error al guardar la firma:', error);
+        alert('Error al guardar la firma: ' + error.message);
+    }
+}
+
+function showSignaturePreview(imageData) {
+    const preview = $('#signature-preview');
+    preview.html(`
+        <div class="text-center">
+            <img src="${imageData}" alt="Firma" style="max-width: 100%; max-height: 100px; border: 1px solid #ddd; border-radius: 4px;">
+            <br><small class="text-muted">Firma guardada</small>
+        </div>
+    `);
+}
+
+// ===== UTILIDADES =====
+function isValidEmail(email) {
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function toggleDependentFields() {
+    var hasSignature = $('#id_customer_signature_option').val();
+    var signatureDesc = $('#id_customer_signature_desc');
+    
+    if (hasSignature && hasSignature !== '') {
+        signatureDesc.closest('.col-md-6').show();
+    } else {
+        signatureDesc.closest('.col-md-6').hide();
+    }
+}
+
+// ===== INICIALIZACIÓN =====
+$(document).ready(function() {
+    // Inicializar firma
+    initSignaturePad();
+    
+    // Debug: verificar envío del formulario
+    $('form').on('submit', function() {
+        const signatureData = $('#signatureData').val();
+        console.log('DEBUG: Enviando formulario con signature_data:', signatureData ? 'SÍ TIENE DATOS' : 'VACÍO');
+        if (signatureData) {
+            console.log('DEBUG: Tamaño de signature_data:', signatureData.length);
+        }
+    });
+    
+    // Ejecutar al cargar la página
+    toggleDependentFields();
+    $('#id_customer_signature_option').on('change', toggleDependentFields);
+    
+    // Cargar firma existente si hay datos
+    const existingSignatureData = $('#signatureData').val();
+    if (existingSignatureData) {
+        try {
+            const data = JSON.parse(existingSignatureData);
+            if (data.imageData) {
+                showSignaturePreview(data.imageData);
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar la firma existente');
+        }
+    }
+});
+</script>
+
+<!-- Signature Pad Library -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+
+{% endblock %}

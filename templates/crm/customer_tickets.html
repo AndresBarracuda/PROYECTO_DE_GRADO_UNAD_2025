@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tickets de {{ customer.customer_first_name }} {{ customer.customer_first_surname }} - CRM UNAD{% endblock %}
+
+{% block extra_css %}
+<style>
+    .customer-info-card {
+        border-left: 4px solid #28a745;
+    }
+    
+    .ticket-card {
+        border-left: 4px solid #007bff;
+        transition: all 0.3s ease;
+    }
+    
+    .ticket-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .status-badges {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .ticket-number {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'crm:customer_list' %}">Clientes</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'crm:customer_detail' customer.customer_id %}">
+                                {{ customer.customer_first_name }} {{ customer.customer_first_surname }}
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Tickets</li>
+                    </ol>
+                </nav>
+                <h2 class="mb-0">
+                    <i class="fas fa-ticket-alt me-2 text-primary"></i>
+                    Tickets del Cliente
+                </h2>
+                <p class="text-muted mt-2">{{ customer.customer_first_name }} {{ customer.customer_first_surname }}</p>
+            </div>
+            <div>
+                <a href="{% url 'crm:customer_detail' customer.customer_id %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-user me-1"></i>Ver Cliente
+                </a>
+                <a href="{% url 'crm:ticket_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-1"></i>Todos los Tickets
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Información del Cliente -->
+            <div class="col-md-4 mb-4">
+                <div class="card customer-info-card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>Información del Cliente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h5 class="mb-1">
+                                {{ customer.customer_first_name }}
+                                {% if customer.customer_middle_name %}
+                                    {{ customer.customer_middle_name }}
+                                {% endif %}
+                                {{ customer.customer_first_surname }}
+                                {% if customer.customer_second_surname %}
+                                    {{ customer.customer_second_surname }}
+                                {% endif %}
+                            </h5>
+                            <p class="text-muted mb-0">
+                                {{ customer.customer_document_type.document_type_acronym }} 
+                                {{ customer.customer_document_number }}
+                            </p>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="mb-3">
+                            <strong>Teléfono:</strong><br>
+                            <i class="fas fa-phone text-success me-1"></i>
+                            {{ customer.customer_cell_number }}
+                        </div>
+                        
+                        {% if customer.customer_email %}
+                        <div class="mb-3">
+                            <strong>Email:</strong><br>
+                            <i class="fas fa-envelope text-info me-1"></i>
+                            {{ customer.customer_email }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <strong>Ciudad:</strong><br>
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                            {{ customer.customer_city.city_name }}
+                        </div>
+                        
+                        {% if customer.customer_neighborhood %}
+                        <div class="mb-3">
+                            <strong>Barrio:</strong><br>
+                            {{ customer.customer_neighborhood }}
+                        </div>
+                        {% endif %}
+                        
+                        <hr>
+                        
+                        <!-- Estadísticas Rápidas -->
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <h5 class="text-primary mb-1">{{ total_tickets }}</h5>
+                                    <small class="text-muted">Total Tickets</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h5 class="text-warning mb-1">{{ winner_tickets }}</h5>
+                                <small class="text-muted">Ganadores</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Tickets -->
+            <div class="col-md-8">
+                <!-- Filtros -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-4">
+                                <label for="id_campaign" class="form-label">Campaña</label>
+                                <select name="campaign" id="id_campaign" class="form-select">
+                                    <option value="">Todas las Campañas</option>
+                                    {% for campaign in campaigns %}
+                                        <option value="{{ campaign.campaign_id }}" 
+                                                {% if request.GET.campaign == campaign.campaign_id|stringformat:"s" %}selected{% endif %}>
+                                            {{ campaign.campaign_name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="id_status" class="form-label">Estado</label>
+                                <select name="status" id="id_status" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="winner" {% if request.GET.status == "winner" %}selected{% endif %}>
+                                        Ganadores
+                                    </option>
+                                    <option value="printed" {% if request.GET.status == "printed" %}selected{% endif %}>
+                                        Impresos
+                                    </option>
+                                    <option value="pending" {% if request.GET.status == "pending" %}selected{% endif %}>
+                                        Pendientes
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="id_order" class="form-label">Ordenar por</label>
+                                <select name="order" id="id_order" class="form-select">
+                                    <option value="-ticket_registration_date" 
+                                            {% if request.GET.order == "-ticket_registration_date" or not request.GET.order %}selected{% endif %}>
+                                        Más Recientes
+                                    </option>
+                                    <option value="ticket_registration_date" 
+                                            {% if request.GET.order == "ticket_registration_date" %}selected{% endif %}>
+                                        Más Antiguos
+                                    </option>
+                                    <option value="-ticket_value" 
+                                            {% if request.GET.order == "-ticket_value" %}selected{% endif %}>
+                                        Mayor Valor
+                                    </option>
+                                    <option value="ticket_value" 
+                                            {% if request.GET.order == "ticket_value" %}selected{% endif %}>
+                                        Menor Valor
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-filter"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Resumen de Resultados -->
+                {% if tickets %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">
+                            Mostrando {{ tickets|length }} de {{ total_tickets }} tickets
+                        </span>
+                        {% if winner_tickets > 0 %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-trophy me-1"></i>{{ winner_tickets }} ganador{{ winner_tickets|pluralize:"es" }}
+                            </span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <!-- Tickets -->
+                {% if tickets %}
+                    <div class="row">
+                        {% for ticket in tickets %}
+                            <div class="col-12 mb-3">
+                                <div class="card ticket-card">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-3">
+                                                <div class="ticket-number text-primary">
+                                                    {{ ticket.ticket_number }}
+                                                </div>
+                                                <small class="text-muted">
+                                                    {{ ticket.ticket_registration_date|date:"d/m/Y H:i" }}
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="col-md-4">
+                                                <strong>{{ ticket.ticket_campaign.campaign_name|truncatechars:40 }}</strong><br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    {{ ticket.ticket_campaign.campaign_start_date|date:"d/m/Y" }} - 
+                                                    {{ ticket.ticket_campaign.campaign_end_date|date:"d/m/Y" }}
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="col-md-2 text-center">
+                                                <div class="fs-5 text-success fw-bold">
+                                                    ${{ ticket.ticket_value|floatformat:0 }}
+                                                </div>
+                                                <small class="text-muted">Valor</small>
+                                            </div>
+                                            
+                                            <div class="col-md-2">
+                                                <div class="status-badges">
+                                                    {% if ticket.ticket_is_winner %}
+                                                        <span class="badge bg-warning">
+                                                            <i class="fas fa-trophy me-1"></i>Ganador
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if ticket.ticket_is_printed %}
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-print me-1"></i>Impreso
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">
+                                                            <i class="fas fa-clock me-1"></i>Pendiente
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if not ticket.ticket_status %}
+                                                        <span class="badge bg-danger">Inactivo</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="col-md-1 text-end">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                                            type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{% url 'crm:ticket_detail' ticket.ticket_id %}">
+                                                                <i class="fas fa-eye me-2"></i>Ver Detalle
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{% url 'crm:ticket_print_preview' ticket.ticket_id %}"
+                                                               target="_blank">
+                                                                <i class="fas fa-search me-2"></i>Vista Previa
+                                                            </a>
+                                                        </li>
+                                                        {% if not ticket.ticket_is_printed and ticket.ticket_campaign.campaign_print_ticket %}
+                                                            <li>
+                                                                <a class="dropdown-item" 
+                                                                   href="{% url 'crm:ticket_print' ticket.ticket_id %}"
+                                                                   onclick="return confirm('¿Marcar como impreso?')">
+                                                                    <i class="fas fa-print me-2"></i>Marcar Impreso
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        {% if not ticket.ticket_is_winner %}
+                                                            <li>
+                                                                <a class="dropdown-item" 
+                                                                   href="{% url 'crm:ticket_mark_winner' ticket.ticket_id %}"
+                                                                   onclick="return confirm('¿Marcar como ganador?')">
+                                                                    <i class="fas fa-trophy me-2"></i>Marcar Ganador
+                                                                </a>
+                                                            </li>
+                                                        {% endif %}
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{% url 'crm:campaign_detail' ticket.ticket_campaign.campaign_id %}">
+                                                                <i class="fas fa-bullhorn me-2"></i>Ver Campaña
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Información Adicional -->
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <small class="text-muted">
+                                                    <strong>Código de Validación:</strong> 
+                                                    <span class="font-monospace">{{ ticket.ticket_validation_code }}</span>
+                                                    <span class="mx-2">|</span>
+                                                    <strong>Factura:</strong> 
+                                                    {{ ticket.ticket_invoice.invoice_campaign_invoice_number }}
+                                                    <span class="mx-2">|</span>
+                                                    <strong>ID:</strong> {{ ticket.ticket_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Paginación -->
+                    {% if is_paginated %}
+                        <nav aria-label="Navegación de tickets">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if request.GET.campaign %}&campaign={{ request.GET.campaign }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order %}&order={{ request.GET.order }}{% endif %}">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.campaign %}&campaign={{ request.GET.campaign }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order %}&order={{ request.GET.order }}{% endif %}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.campaign %}&campaign={{ request.GET.campaign }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order %}&order={{ request.GET.order }}{% endif %}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.campaign %}&campaign={{ request.GET.campaign }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order %}&order={{ request.GET.order }}{% endif %}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+
+                {% else %}
+                    <!-- Estado Vacío -->
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-ticket-alt fa-4x text-muted mb-4"></i>
+                            <h4 class="text-muted">No hay tickets para este cliente</h4>
+                            <p class="text-muted mb-4">
+                                {% if request.GET.campaign or request.GET.status %}
+                                    No se encontraron tickets con los filtros aplicados.
+                                {% else %}
+                                    Este cliente aún no tiene tickets generados.
+                                {% endif %}
+                            </p>
+                            {% if request.GET.campaign or request.GET.status %}
+                                <a href="{% url 'crm:customer_tickets' customer.customer_id %}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-times me-1"></i>Limpiar Filtros
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

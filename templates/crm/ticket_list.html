@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        font-size: 0.75rem;
+    }
+    
+    .ticket-card {
+        transition: transform 0.2s;
+    }
+    
+    .ticket-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="fas fa-ticket-alt me-2 text-primary"></i>{{ page_title }}
+            </h2>
+            <div>
+                <a href="{% url 'crm:ticket_statistics' %}" class="btn btn-info">
+                    <i class="fas fa-chart-bar me-1"></i>Estadísticas
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Número, cliente, código...">
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="campaign" class="form-label">Campaña</label>
+                    <select class="form-select" id="campaign" name="campaign">
+                        <option value="">Todas las campañas</option>
+                        {% for campaign in campaigns %}
+                            <option value="{{ campaign.campaign_id }}" 
+                                    {% if campaign_filter == campaign.campaign_id|stringformat:"s" %}selected{% endif %}>
+                                {{ campaign.campaign_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Estado</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Todos los estados</option>
+                        <option value="printed" {% if status_filter == 'printed' %}selected{% endif %}>Impresos</option>
+                        <option value="unprinted" {% if status_filter == 'unprinted' %}selected{% endif %}>Sin imprimir</option>
+                        <option value="winner" {% if status_filter == 'winner' %}selected{% endif %}>Ganadores</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Resultados -->
+        {% if tickets %}
+            <div class="row">
+                {% for ticket in tickets %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card ticket-card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-ticket-alt me-1"></i>{{ ticket.ticket_number }}
+                                </h6>
+                                <div>
+                                    {% if ticket.ticket_is_winner %}
+                                        <span class="badge bg-warning status-badge">
+                                            <i class="fas fa-trophy me-1"></i>Ganador
+                                        </span>
+                                    {% endif %}
+                                    {% if ticket.ticket_is_printed %}
+                                        <span class="badge bg-success status-badge">
+                                            <i class="fas fa-print me-1"></i>Impreso
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary status-badge">
+                                            <i class="fas fa-clock me-1"></i>Pendiente
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>Cliente:</strong><br>
+                                    <a href="{% url 'crm:customer_detail' ticket.ticket_customer.customer_id %}" 
+                                       class="text-decoration-none">
+                                        {{ ticket.ticket_customer.customer_first_name }} {{ ticket.ticket_customer.customer_first_surname }}
+                                    </a>
+                                </p>
+                                
+                                <p class="card-text">
+                                    <strong>Campaña:</strong><br>
+                                    <a href="{% url 'crm:campaign_detail' ticket.ticket_campaign.campaign_id %}" 
+                                       class="text-decoration-none">
+                                        {{ ticket.ticket_campaign.campaign_name }}
+                                    </a>
+                                </p>
+                                
+                                <p class="card-text">
+                                    <strong>Valor:</strong> ${{ ticket.ticket_value|floatformat:0 }}
+                                </p>
+                                
+                                <p class="card-text">
+                                    <strong>Código:</strong> 
+                                    <code>{{ ticket.ticket_validation_code }}</code>
+                                </p>
+                                
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    {{ ticket.ticket_registration_date|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                            <div class="card-footer">
+                                <div class="btn-group w-100" role="group">
+                                    <a href="{% url 'crm:ticket_detail' ticket.ticket_id %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>Ver
+                                    </a>
+                                    
+                                    <a href="{% url 'crm:ticket_print_preview' ticket.ticket_id %}" 
+                                       class="btn btn-outline-info btn-sm"
+                                       target="_blank">
+                                        <i class="fas fa-search me-1"></i>Vista Previa
+                                    </a>
+                                    
+                                    {% if not ticket.ticket_is_printed and ticket.ticket_campaign.campaign_print_ticket %}
+                                        <a href="{% url 'crm:ticket_print' ticket.ticket_id %}" 
+                                           class="btn btn-outline-success btn-sm"
+                                           onclick="return confirm('¿Marcar como impreso?')">
+                                            <i class="fas fa-print me-1"></i>Imprimir
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% if not ticket.ticket_is_winner %}
+                                        <a href="{% url 'crm:ticket_mark_winner' ticket.ticket_id %}" 
+                                           class="btn btn-outline-warning btn-sm"
+                                           onclick="return confirm('¿Marcar como ganador?')">
+                                            <i class="fas fa-trophy me-1"></i>Ganador
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Paginación -->
+            {% if tickets.has_other_pages %}
+                <nav aria-label="Paginación de tickets">
+                    <ul class="pagination justify-content-center">
+                        {% if tickets.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if campaign_filter %}campaign={{ campaign_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ tickets.previous_page_number }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in tickets.paginator.page_range %}
+                            {% if tickets.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > tickets.number|add:'-3' and num < tickets.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if campaign_filter %}campaign={{ campaign_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if tickets.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if search %}search={{ search }}&{% endif %}{% if campaign_filter %}campaign={{ campaign_filter }}&{% endif %}{% if status_filter %}status={{ status_filter }}&{% endif %}page={{ tickets.next_page_number }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No se encontraron tickets</h4>
+                <p class="text-muted">No hay tickets que coincidan con los filtros aplicados.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-submit del formulario al cambiar filtros
+    $('#campaign, #status').change(function() {
+        $(this).closest('form').submit();
+    });
+});
+</script>
+{% endblock %}

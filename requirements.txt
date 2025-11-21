@@ -1,0 +1,9 @@
+Django==4.2.25
+asgiref==3.8.1
+sqlparse==0.5.3
+tzdata==2025.2
+typing-extensions==4.13.2
+backports.zoneinfo==0.2.1
+django-import-export==4.1.1
+diff-match-patch==20241021
+tablib==3.5.0

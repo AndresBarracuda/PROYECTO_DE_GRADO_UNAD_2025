@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load group_tags %}
+
+{% block title %}{{ page_title }} - CRM UNAD{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1><i class="fas fa-bullhorn me-2"></i>Lista de Campañas</h1>
+        <p class="text-muted">Gestiona todas las campañas promocionales</p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if user|has_any_group:"Admin,operator" %}
+        <a href="{% url 'crm:campaign_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Crear Campaña
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtros y Búsqueda -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="get" class="d-flex">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search" 
+                       placeholder="Buscar campaña..." value="{{ search_query }}">
+                <button class="btn btn-outline-secondary" type="submit">
+                    <i class="fas fa-search"></i>
+                </button>
+                {% if search_query %}
+                <a href="{% url 'crm:campaign_list' %}" class="btn btn-outline-danger">
+                    <i class="fas fa-times"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        <small class="text-muted">Total: {{ total_campaigns }} campaña{{ total_campaigns|pluralize }}</small>
+    </div>
+</div>
+
+<!-- Lista de Campañas -->
+<div class="card">
+    <div class="card-body">
+        {% if campaigns %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Campaña</th>
+                            <th>Tipo</th>
+                            <th>Fechas</th>
+                            <th>Estado</th>
+                            <th>Premio</th>
+                            <th>Valor Mínimo</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in campaigns %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>{{ campaign.campaign_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Creada: {{ campaign.campaign_registration_date|date:"d/m/Y" }}
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if campaign.campaign_type %}
+                                    <span class="badge bg-secondary">{{ campaign.campaign_type }}</span>
+                                {% else %}
+                                    <span class="text-muted">Sin tipo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>
+                                    <i class="fas fa-play text-success me-1"></i>{{ campaign.campaign_start_date|date:"d/m/Y" }}
+                                    <br>
+                                    <i class="fas fa-stop text-danger me-1"></i>{{ campaign.campaign_end_date|date:"d/m/Y" }}
+                                </small>
+                            </td>
+                            <td>
+                                {% if campaign.is_active %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-play me-1"></i>Activa
+                                    </span>
+                                    {% if campaign.days_remaining > 0 %}
+                                        <br><small class="text-muted">{{ campaign.days_remaining }} día{{ campaign.days_remaining|pluralize }} restante{{ campaign.days_remaining|pluralize }}</small>
+                                    {% endif %}
+                                {% elif campaign.campaign_status %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-pause me-1"></i>Programada
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-ban me-1"></i>Inactiva
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if campaign.campaign_award_title %}
+                                    <strong>{{ campaign.campaign_award_title }}</strong>
+                                    {% if campaign.campaign_award_description %}
+                                        <br><small class="text-muted">{{ campaign.campaign_award_description|truncatechars:50 }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Sin premio definido</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>${{ campaign.campaign_minimum_purchase_value|floatformat:0 }}</strong>
+                                <br>
+                                <small class="text-muted">x{{ campaign.campaign_ticket_multiplier }} ticket{{ campaign.campaign_ticket_multiplier|pluralize }}</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'crm:campaign_detail' campaign.campaign_id %}" 
+                                       class="btn btn-sm btn-outline-info" title="Ver detalles">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user|has_any_group:"Admin,operator" %}
+                                    <a href="{% url 'crm:campaign_edit' campaign.campaign_id %}" 
+                                       class="btn btn-sm btn-outline-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            {% if campaigns.has_other_pages %}
+            <div class="d-flex justify-content-center mt-4">
+                <nav aria-label="Paginación de campañas">
+                    <ul class="pagination">
+                        {% if campaigns.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ campaigns.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                Página {{ campaigns.number }} de {{ campaigns.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if campaigns.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ campaigns.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ campaigns.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No hay campañas</h4>
+                {% if search_query %}
+                    <p class="text-muted">No se encontraron campañas que coincidan con "{{ search_query }}"</p>
+                    <a href="{% url 'crm:campaign_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-times me-2"></i>Limpiar búsqueda
+                    </a>
+                {% else %}
+                    <p class="text-muted">Aún no has creado ninguna campaña promocional</p>
+                    {% if user|has_any_group:"Admin,operator" %}
+                    <a href="{% url 'crm:campaign_add' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Crear Primera Campaña
+                    </a>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
