@@ -232,9 +232,7 @@
                                     <div>
                                         <span class="badge bg-info">
                                             <i class="fas fa-ticket-alt me-1"></i>
-                                            {% with tickets_count=invoice.invoice_for_each_campaign_invoice.invoice_customer.ticket_set.filter(ticket_campaign=invoice.invoice_for_each_campaign_campaign).count %}
-                                                {{ tickets_count }} ticket{{ tickets_count|pluralize:"s" }}
-                                            {% endwith %}
+                                            {{ invoice.tickets_count }} ticket{{ invoice.tickets_count|pluralize:"s" }}
                                         </span>
                                     </div>
                                     <div class="btn-group btn-group-sm">

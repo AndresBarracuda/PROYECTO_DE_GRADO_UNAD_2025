@@ -633,7 +633,12 @@ def invoice_list(request):
         'invoice_for_each_campaign_invoice__invoice_customer',
         'invoice_for_each_campaign_invoice__invoice_payment_method',
         'invoice_for_each_campaign_invoice__invoice_commercial_premise'
-    ).filter(invoice_status=True)
+    ).filter(invoice_status=True).annotate(
+        tickets_count=Count(
+            'invoice_for_each_campaign_invoice__invoice_customer__ticket',
+            filter=Q(invoice_for_each_campaign_invoice__invoice_customer__ticket__ticket_campaign=F('invoice_for_each_campaign_campaign'))
+        )
+    )
     
     # Filtros
     search_query = request.GET.get('search', '')
